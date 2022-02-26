@@ -1,7 +1,7 @@
 package com.github.taskresolver4j;
 
-import com.github.signer4j.progress.IProgress;
-import com.github.signer4j.progress.IProgressFactory;
+import com.github.progress4j.IProgress;
+import com.github.progress4j.IProgressFactory;
 
 public interface ITaskRequest<O> {
   

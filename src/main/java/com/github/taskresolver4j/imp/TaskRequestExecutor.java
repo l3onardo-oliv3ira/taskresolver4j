@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.signer4j.progress.IProgressFactory;
-import com.github.signer4j.progress.IProgressView;
-import com.github.signer4j.progress.IStage;
+import com.github.progress4j.IProgressFactory;
+import com.github.progress4j.IProgressView;
+import com.github.progress4j.IStage;
 import com.github.taskresolver4j.IRequestResolver;
 import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;

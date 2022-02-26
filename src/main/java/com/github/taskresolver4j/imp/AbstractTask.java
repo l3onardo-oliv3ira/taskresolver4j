@@ -1,9 +1,9 @@
 package com.github.taskresolver4j.imp;
 
-import com.github.signer4j.progress.IProgress;
-import com.github.signer4j.progress.IProgressFactory;
-import com.github.signer4j.progress.IProgressView;
-import com.github.signer4j.progress.imp.ProgressOptions;
+import com.github.progress4j.IProgress;
+import com.github.progress4j.IProgressFactory;
+import com.github.progress4j.IProgressView;
+import com.github.progress4j.imp.ProgressOptions;
 import com.github.taskresolver4j.ITask;
 import com.github.utils4j.IParam;
 import com.github.utils4j.imp.Params;
