@@ -104,7 +104,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         } finally {
           task.dispose();
         }
-          
+
       }catch(Exception e) {
         progress.abort(e);
       }finally {
