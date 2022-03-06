@@ -10,6 +10,6 @@ public interface IRequestReader<T extends Params> {
   default T read(String text, T params) throws IOException {
     return read(text, params, o -> o);
   }
-  
+
   T read(String text, T params, Function<?, ?> wrapper) throws IOException;
 }

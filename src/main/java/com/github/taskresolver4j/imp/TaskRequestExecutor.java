@@ -29,7 +29,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   private final IRequestResolver<I, O, R> requestResolver;
   
-  protected final AtomicBoolean localRequest = new AtomicBoolean(false);
+  protected final AtomicBoolean internalRequest = new AtomicBoolean(false);
 
   protected final ExecutorService executor;
   
@@ -117,7 +117,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   @Override
   public final void setAllowLocalRequest(boolean enabled) {
-    this.localRequest.set(enabled);
+    this.internalRequest.set(enabled);
   }
 
   protected void onRequestResolved(R taskRequest) {
