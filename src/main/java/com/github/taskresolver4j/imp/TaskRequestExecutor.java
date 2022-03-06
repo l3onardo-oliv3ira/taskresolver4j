@@ -3,7 +3,6 @@ package com.github.taskresolver4j.imp;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +28,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   private final IRequestResolver<I, O, R> requestResolver;
   
-  protected final AtomicBoolean internalRequest = new AtomicBoolean(false);
-
   protected final ExecutorService executor;
   
   private static enum Stage implements IStage {
@@ -115,11 +112,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     }
   }
 
-  @Override
-  public final void setAllowLocalRequest(boolean enabled) {
-    this.internalRequest.set(enabled);
-  }
-
   protected void onRequestResolved(R taskRequest) {
   }
 
@@ -128,7 +120,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
 
   protected void endExecution(IProgressView progress) {
-    setAllowLocalRequest(false);
     progress.undisplay();
     progress.stackTracer(s -> LOGGER.info(s.toString()));
     progress.dispose();

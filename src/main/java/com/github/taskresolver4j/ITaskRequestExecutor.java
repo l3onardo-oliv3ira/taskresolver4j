@@ -6,5 +6,4 @@ public interface ITaskRequestExecutor<I, O> {
   
   void execute(I request, O response) throws TaskExecutorException;
   void close();
-  void setAllowLocalRequest(boolean enabled);
 }
