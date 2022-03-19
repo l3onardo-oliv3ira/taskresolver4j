@@ -6,7 +6,7 @@
 
   <groupId>com.github</groupId>
   <artifactId>taskresolver4j</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0</version>
 
   <name>taskresolver4j</name>
   <!-- FIXME change it to the project's website -->
@@ -30,6 +30,12 @@
 	  <groupId>org.slf4j</groupId>
 	  <artifactId>slf4j-log4j12</artifactId>
 	  <version>1.6.1</version>
+	</dependency>
+	
+	<dependency>
+	  	<groupId>com.github</groupId>
+  		<artifactId>progress4j</artifactId>
+  		<version>1.0</version>
 	</dependency>
 	
   </dependencies>
