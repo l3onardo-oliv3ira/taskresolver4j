@@ -32,4 +32,8 @@ import java.io.IOException;
 public interface ITaskResponse<T> {
   boolean isSuccess();
   void processResponse(T response) throws IOException;
+
+  default ITaskResponse<T> asJson() {
+    return this;
+  }
 }
