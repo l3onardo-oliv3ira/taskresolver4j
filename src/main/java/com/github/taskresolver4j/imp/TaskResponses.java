@@ -49,11 +49,18 @@ public class TaskResponses<T> implements ITaskResponse<T> {
     return this;
   }
 
-
   @Override
-  public void processResponse(T response) throws IOException {
+  public final void processResponse(T response) throws IOException {
     for(ITaskResponse<T> r: responses) {
       r.processResponse(response);
     }
   }
+  
+  @Override
+  public final ITaskResponse<T> asJson() {
+    for(int i = 0; i < responses.size(); i++) {
+      responses.set(i, responses.get(i).asJson());
+    }
+    return this;
+  }  
 }
