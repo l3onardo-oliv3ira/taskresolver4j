@@ -113,8 +113,8 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         progress.end();
         ITask<O> task = taskRequest.getTask(progress, factory);
         try {
-          progress.begin(Stage.PROCESSING_TASK, 1);
-          progress.step("Executando a tarefa '%s'", task.getId());
+          progress.begin(Stage.PROCESSING_TASK);
+          progress.info("Tarefa '%s'", task.getId());
           ITaskResponse<O> output = task.get();          
           try {
             output.processResponse(response);
