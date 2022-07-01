@@ -93,6 +93,11 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   public void close() {
     Services.shutdownNow(executor, 2); 
   }
+
+  @Override
+  public final void async(Runnable runnable) {
+    this.executor.execute(runnable);
+  }
   
   @Override
   public final void execute(I request, O response) throws TaskExecutorException {
