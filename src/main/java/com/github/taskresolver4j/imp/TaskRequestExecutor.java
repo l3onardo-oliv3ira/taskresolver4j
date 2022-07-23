@@ -72,11 +72,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     public final String toString() {
       return message;
     }
-
-    @Override
-    public final String interval() {
-      return "(" + (ordinal() + 1) + " de 2)";
-    }
   };
 
   protected TaskRequestExecutor(IRequestResolver<I, O, R> resolver, IProgressFactory factory) {
