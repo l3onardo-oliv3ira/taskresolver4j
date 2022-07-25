@@ -30,6 +30,11 @@ package com.github.taskresolver4j;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 
 public interface ITaskRequestExecutor<I, O> {
+  String CLOSING = ITaskRequestExecutor.class.getSimpleName()  + ".closing";
+  
+  void notifyOpening();
+  void notifyClosing();
+
   void execute(I request, O response) throws TaskExecutorException;
   void async(Runnable runnable);
   void close();

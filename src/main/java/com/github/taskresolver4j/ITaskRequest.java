@@ -27,12 +27,14 @@
 
 package com.github.taskresolver4j;
 
-import com.github.progress4j.IProgress;
+import java.util.function.Supplier;
+
 import com.github.progress4j.IProgressFactory;
+import com.github.progress4j.IProgressView;
 
 public interface ITaskRequest<O> {
   
-  ITask<O> getTask(IProgress progress, IProgressFactory factory);
-  
   boolean isValid(StringBuilder because);
+
+  ITask<O> getTask(IProgressView progress, IProgressFactory factory, Supplier<Boolean> closing);
 }

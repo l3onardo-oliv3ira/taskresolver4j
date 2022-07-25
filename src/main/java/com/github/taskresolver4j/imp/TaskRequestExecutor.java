@@ -51,11 +51,14 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(TaskRequestExecutor.class);
   
+  private volatile boolean closing = false;
+  
   private final IProgressFactory factory;
 
   private final IRequestResolver<I, O, R> requestResolver;
   
   protected final ExecutorService executor;
+  
   
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
@@ -85,8 +88,22 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
   
   @Override
+  public final void notifyClosing() {
+    closing = true;
+  }
+  
+  @Override
+  public final void notifyOpening() {
+    closing = false;
+  }
+  
+  @Override
   public void close() {
     Services.shutdownNow(executor, 2); 
+  }
+  
+  protected boolean isClosing() {
+    return closing;
   }
 
   @Override
@@ -111,7 +128,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         progress.step("Notificando criação de requisção");
         onRequestResolved(taskRequest);
         progress.end();
-        ITask<O> task = taskRequest.getTask(progress, factory);
+        ITask<O> task = taskRequest.getTask(progress, factory, this::isClosing);
         try {
           progress.begin(Stage.PROCESSING_TASK);
           progress.info("Tarefa '%s'", task.getId());
