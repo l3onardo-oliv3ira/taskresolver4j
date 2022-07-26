@@ -39,17 +39,21 @@ import com.github.utils4j.imp.Params;
 
 public class DefaultTaskRequest<T> extends Params implements ITaskRequest<T> {
   
+  public static final String PARAM_TASK = ITask.class.getSimpleName() + ".task";
+  
+  public static final String PARAM_PROGRESS = IProgress.class.getSimpleName() + ".progress";
+  
+  public static final String PARAM_PROGRESS_FACTORY = IProgressFactory.class.getSimpleName() + ".factory";
+
+  public static final String PARAM_EXECUTOR_CLOSING = ITaskRequestExecutor.class.getSimpleName()  + ".closing";
+
   @Override
   public final ITask<T> getTask(IProgressView progress, IProgressFactory factory, Supplier<Boolean> closing) {
-    return super
-      .of(IProgress.PARAM_NAME, progress)
-      .of(IProgressFactory.PARAM_NAME, factory)
-      .of(ITaskRequestExecutor.CLOSING, closing)
-      .getValue(ITask.PARAM_NAME);
+    return super.of(PARAM_PROGRESS, progress).of(PARAM_PROGRESS_FACTORY, factory).of(PARAM_EXECUTOR_CLOSING, closing).getValue(PARAM_TASK);
   }
   
   @Override
-  public final boolean isValid(StringBuilder invalidCause) {
+  public final boolean isValid(StringBuilder whyNot) {
     return true;
   }
 }

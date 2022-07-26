@@ -27,7 +27,6 @@
 
 package com.github.taskresolver4j.imp;
 
-import com.github.progress4j.IProgress;
 import com.github.progress4j.IProgressFactory;
 import com.github.progress4j.IProgressView;
 import com.github.progress4j.imp.ProgressOptions;
@@ -40,7 +39,7 @@ public abstract class AbstractTask<T> implements ITask<T> {
   protected final Params params;
 
   protected AbstractTask(Params params) {
-    this.params = params.of(ITask.PARAM_NAME, this);
+    this.params = params.of(DefaultTaskRequest.PARAM_TASK, this);
   }
 
   protected final Params getParams() {
@@ -56,11 +55,12 @@ public abstract class AbstractTask<T> implements ITask<T> {
   }
   
   protected final IProgressView getProgress() {
-    return getParameter(IProgress.PARAM_NAME).orElse(ProgressOptions.IDLE);
+    return getParameter(DefaultTaskRequest.PARAM_PROGRESS).orElse(ProgressOptions.IDLE);
   }
   
   protected final IProgressView newProgress() {
-    return params.of(IProgress.PARAM_NAME, getParameter(IProgressFactory.PARAM_NAME).<IProgressFactory>get().get()).getValue(IProgress.PARAM_NAME);
+    IProgressFactory factory = getParameter(DefaultTaskRequest.PARAM_PROGRESS_FACTORY).<IProgressFactory>get();
+    return params.of(DefaultTaskRequest.PARAM_PROGRESS, factory.get()).getValue(DefaultTaskRequest.PARAM_PROGRESS);
   }
   
   @Override

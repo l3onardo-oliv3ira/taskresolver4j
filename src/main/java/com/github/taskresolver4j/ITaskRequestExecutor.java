@@ -30,8 +30,6 @@ package com.github.taskresolver4j;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 
 public interface ITaskRequestExecutor<I, O> {
-  String CLOSING = ITaskRequestExecutor.class.getSimpleName()  + ".closing";
-  
   void notifyOpening();
   void notifyClosing();
 
