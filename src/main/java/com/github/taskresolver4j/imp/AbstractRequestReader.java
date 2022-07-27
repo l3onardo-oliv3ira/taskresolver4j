@@ -51,8 +51,8 @@ public abstract class AbstractRequestReader<P extends Params, Pojo> implements I
 
   @SuppressWarnings("unchecked")
   @Override
-  public final P read(String text, P params, Function<?,?> wrapper) throws IOException {    
-    ITask<?> task = createTask(params, (Pojo)wrapper.apply(pojoReader.read(text)));
+  public final P read(String text, P params, Function<?,?> decorator) throws IOException {    
+    ITask<?> task = createTask(params, (Pojo)decorator.apply(pojoReader.read(text)));
     StringBuilder whyNot = new StringBuilder();
     if (!task.isValid(whyNot)) {
       throw new IOException("Unabled to create a valid task with parameter: " + text + " reason: " + whyNot);

@@ -27,10 +27,12 @@
 
 package com.github.taskresolver4j.imp;
 
+import java.util.function.Supplier;
+
 import com.github.progress4j.IProgressFactory;
 import com.github.progress4j.IProgressView;
-import com.github.progress4j.imp.ProgressOptions;
 import com.github.taskresolver4j.ITask;
+import com.github.utils4j.ICanceller;
 import com.github.utils4j.IParam;
 import com.github.utils4j.imp.Params;
 
@@ -55,12 +57,11 @@ public abstract class AbstractTask<T> implements ITask<T> {
   }
   
   protected final IProgressView getProgress() {
-    return getParameter(DefaultTaskRequest.PARAM_PROGRESS).orElse(ProgressOptions.IDLE);
+    return getParameter(DefaultTaskRequest.PARAM_PROGRESS_FACTORY).<IProgressFactory>get().get();
   }
   
-  protected final IProgressView newProgress() {
-    IProgressFactory factory = getParameter(DefaultTaskRequest.PARAM_PROGRESS_FACTORY).<IProgressFactory>get();
-    return params.of(DefaultTaskRequest.PARAM_PROGRESS, factory.get()).getValue(DefaultTaskRequest.PARAM_PROGRESS);
+  protected final Supplier<ICanceller> getCanceller() {
+    return () -> getProgress();
   }
   
   @Override

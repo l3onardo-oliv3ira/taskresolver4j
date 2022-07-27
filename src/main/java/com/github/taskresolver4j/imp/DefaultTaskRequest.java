@@ -29,9 +29,7 @@ package com.github.taskresolver4j.imp;
 
 import java.util.function.Supplier;
 
-import com.github.progress4j.IProgress;
 import com.github.progress4j.IProgressFactory;
-import com.github.progress4j.IProgressView;
 import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
@@ -41,15 +39,13 @@ public class DefaultTaskRequest<T> extends Params implements ITaskRequest<T> {
   
   public static final String PARAM_TASK = ITask.class.getSimpleName() + ".task";
   
-  public static final String PARAM_PROGRESS = IProgress.class.getSimpleName() + ".progress";
-  
   public static final String PARAM_PROGRESS_FACTORY = IProgressFactory.class.getSimpleName() + ".factory";
 
   public static final String PARAM_EXECUTOR_CLOSING = ITaskRequestExecutor.class.getSimpleName()  + ".closing";
 
   @Override
-  public final ITask<T> getTask(IProgressView progress, IProgressFactory factory, Supplier<Boolean> closing) {
-    return super.of(PARAM_PROGRESS, progress).of(PARAM_PROGRESS_FACTORY, factory).of(PARAM_EXECUTOR_CLOSING, closing).getValue(PARAM_TASK);
+  public final ITask<T> getTask(IProgressFactory factory, Supplier<Boolean> closing) {
+    return of(PARAM_PROGRESS_FACTORY, factory).of(PARAM_EXECUTOR_CLOSING, closing).getValue(PARAM_TASK);
   }
   
   @Override

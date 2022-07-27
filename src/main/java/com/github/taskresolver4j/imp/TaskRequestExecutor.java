@@ -128,7 +128,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         progress.step("Notificando criação de requisção");
         onRequestResolved(taskRequest);
         progress.end();
-        ITask<O> task = taskRequest.getTask(progress, factory, this::isClosing);
+        ITask<O> task = taskRequest.getTask(factory, this::isClosing);
         try {
           progress.begin(Stage.PROCESSING_TASK);
           progress.info("Tarefa '%s'", task.getId());
@@ -163,9 +163,12 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
 
   protected void endExecution(IProgressView progress) {
-    progress.undisplay();
-    progress.stackTracer(s -> LOGGER.info(s.toString()));
-    progress.dispose();
+    try {
+      progress.undisplay();
+      progress.stackTracer(s -> LOGGER.info(s.toString()));
+    } finally {
+      progress.dispose();
+    }
   }
 }
 
