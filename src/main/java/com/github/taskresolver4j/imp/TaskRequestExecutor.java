@@ -51,14 +51,14 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(TaskRequestExecutor.class);
   
-  private volatile boolean closing = false;
-  
   private final IProgressFactory factory;
 
-  private final IRequestResolver<I, O, R> requestResolver;
-  
+  private volatile boolean closing = false;
+
   protected final ExecutorService executor;
-  
+
+  private final IRequestResolver<I, O, R> resolver;
+
   
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
@@ -82,7 +82,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
 
   protected TaskRequestExecutor(IRequestResolver<I, O, R> resolver, IProgressFactory factory, ExecutorService executor) {
-    this.requestResolver = Args.requireNonNull(resolver, "resolver is null");
+    this.resolver = Args.requireNonNull(resolver, "resolver is null");
     this.factory = Args.requireNonNull(factory, "factory is null");
     this.executor = Args.requireNonNull(executor, "executor is null");
   }
@@ -121,7 +121,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         progress.step("Resolvendo URL");
         R taskRequest;
         try {
-          taskRequest = requestResolver.resolve(request);
+          taskRequest = resolver.resolve(request);
         } catch (TaskResolverException e) {
           throw new TaskExecutorException("Não foi possível resolver a requisição", e);
         }
@@ -144,7 +144,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         } finally {
           task.dispose();
         }
-
       }catch(Exception e) {
         progress.abort(e);
       }finally {
