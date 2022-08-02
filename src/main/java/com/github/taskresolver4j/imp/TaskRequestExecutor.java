@@ -46,6 +46,7 @@ import com.github.taskresolver4j.exception.TaskExecutorException;
 import com.github.taskresolver4j.exception.TaskResolverException;
 import com.github.utils4j.imp.Args;
 import com.github.utils4j.imp.Services;
+import com.github.utils4j.imp.States;
 
 public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITaskRequestExecutor<I, O> {
 
@@ -58,7 +59,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   protected final ExecutorService executor;
 
   private final IRequestResolver<I, O, R> resolver;
-
   
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
@@ -90,6 +90,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   @Override
   public final void notifyClosing() {
     closing = true;
+    factory.interrupt();
   }
   
   @Override
@@ -113,6 +114,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   
   @Override
   public final void execute(I request, O response) throws TaskExecutorException {
+    States.requireTrue(!closing, "Operação está em finalização");
     try {
       IProgressView progress = factory.get(); 
       try {

@@ -25,15 +25,12 @@
 */
 
 
-package com.github.taskresolver4j;
+package com.github.taskresolver4j.exception;
 
-import com.github.taskresolver4j.exception.TaskExecutorException;
+public class TaskExecutorFinishing extends TaskExecutorException {
+  private static final long serialVersionUID = 1L;
 
-public interface ITaskRequestExecutor<I, O> {
-  void notifyClosing();
-  void notifyOpening();
-  
-  void execute(I request, O response) throws TaskExecutorException;
-  void async(Runnable runnable);
-  void close();
+  public TaskExecutorFinishing(String message, Throwable e) {
+    super(message, e);
+  }
 }
