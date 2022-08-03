@@ -43,10 +43,10 @@ import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
 import com.github.taskresolver4j.ITaskResponse;
 import com.github.taskresolver4j.exception.TaskExecutorException;
+import com.github.taskresolver4j.exception.TaskExecutorFinishing;
 import com.github.taskresolver4j.exception.TaskResolverException;
 import com.github.utils4j.imp.Args;
 import com.github.utils4j.imp.Services;
-import com.github.utils4j.imp.States;
 
 public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITaskRequestExecutor<I, O> {
 
@@ -114,7 +114,8 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   
   @Override
   public final void execute(I request, O response) throws TaskExecutorException {
-    States.requireTrue(!closing, "Operação está em finalização");
+    if (closing)
+      throw new TaskExecutorFinishing();
     try {
       IProgressView progress = factory.get(); 
       try {

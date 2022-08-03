@@ -30,7 +30,7 @@ package com.github.taskresolver4j.exception;
 public class TaskExecutorFinishing extends TaskExecutorException {
   private static final long serialVersionUID = 1L;
 
-  public TaskExecutorFinishing(String message, Throwable e) {
-    super(message, e);
+  public TaskExecutorFinishing() {
+    super("Executor em processo de finalização");
   }
 }
