@@ -37,15 +37,15 @@ import com.github.utils4j.imp.Args;
 import com.github.utils4j.imp.JsonTextReader;
 import com.github.utils4j.imp.Params;
 
-public abstract class AbstractRequestReader<P extends Params, Pojo> implements IRequestReader<P>{
+public abstract class RequestReader<P extends Params, Pojo> implements IRequestReader<P>{
 
   private ITextReader pojoReader;  
   
-  public AbstractRequestReader(Class<?> jsonClass) {
+  public RequestReader(Class<?> jsonClass) {
     this(new JsonTextReader(jsonClass));
   }
   
-  public AbstractRequestReader(ITextReader pojoReader) {
+  public RequestReader(ITextReader pojoReader) {
     this.pojoReader = Args.requireNonNull(pojoReader,  "pojoReader is null");    
   }
 
