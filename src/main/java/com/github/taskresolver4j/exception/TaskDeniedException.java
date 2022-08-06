@@ -25,15 +25,12 @@
 */
 
 
-package com.github.taskresolver4j;
+package com.github.taskresolver4j.exception;
 
-import com.github.utils4j.imp.function.IProvider;
-
-public interface ITask<T> extends IProvider<ITaskResponse<T>> {
+public class TaskDeniedException extends TaskException {
+  private static final long serialVersionUID = 5036913751425298195L;
   
-  String getId();
-
-  boolean isValid(StringBuilder reasonIfNot);
-
-  default void dispose() {}
+  public TaskDeniedException(String message) {
+    super(message);
+  }
 }

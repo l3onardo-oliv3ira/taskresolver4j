@@ -30,6 +30,7 @@ package com.github.taskresolver4j.imp;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,7 @@ import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
 import com.github.taskresolver4j.ITaskResponse;
+import com.github.taskresolver4j.exception.TaskDeniedException;
 import com.github.taskresolver4j.exception.TaskExecutorDiscartingException;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 import com.github.taskresolver4j.exception.TaskExecutorFinishingException;
@@ -63,6 +65,8 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   private final IRequestResolver<I, O, R> resolver;
 
   private final BooleanTimeout discarting = new BooleanTimeout(3000);
+  
+  private final AtomicInteger runningTasks = new AtomicInteger(0);
   
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
@@ -108,13 +112,18 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
 
   @Override
-  public void close() {
+  public final void close() throws InterruptedException {
     Services.shutdownNow(executor, 2); 
     discarting.shutdown();
+    closing = false;
   }
   
-  protected boolean isClosing() {
+  protected final boolean isClosing() {
     return closing;
+  }
+  
+  protected final boolean isBatchState() {
+    return runningTasks.get() > 1;
   }
 
   @Override
@@ -135,6 +144,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   public final void execute(I request, O response) throws TaskExecutorException {
     checkAvailability();
     try {
+      runningTasks.incrementAndGet();
       IProgressView progress = factory.get(); 
       try {
         beginExecution(progress);
@@ -165,13 +175,21 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         } finally {
           task.dispose();
         }
-      }catch(Exception e) {
+        
+      } catch (TaskDeniedException e) {
+        discarting.setTrue();
+        throw new TaskExecutorDiscartingException();
+      } catch (Exception e) {
         progress.abort(e);
-      }finally {
+      } finally {
         endExecution(progress);
       }
-    }catch(Throwable e) {
+    } catch (TaskExecutorException e) {
+      throw e;
+    } catch (Throwable e) {
       throw new TaskExecutorException("Exceção inesperada na execução da tarefa", e);
+    } finally {
+      runningTasks.decrementAndGet();
     }
   }
 

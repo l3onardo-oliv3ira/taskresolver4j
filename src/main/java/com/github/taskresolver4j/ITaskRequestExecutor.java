@@ -31,9 +31,12 @@ import com.github.taskresolver4j.exception.TaskExecutorException;
 
 public interface ITaskRequestExecutor<I, O> {
   void notifyClosing();
+  
   void notifyOpening();
   
-  void execute(I request, O response) throws TaskExecutorException;
   void async(Runnable runnable);
-  void close();
+
+  void close() throws InterruptedException;
+  
+  void execute(I request, O response) throws TaskExecutorException;
 }
