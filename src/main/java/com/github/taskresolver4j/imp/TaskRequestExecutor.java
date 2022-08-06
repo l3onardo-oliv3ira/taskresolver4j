@@ -62,7 +62,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   
   private final IRequestResolver<I, O, R> resolver;
 
-  private final BooleanTimeout discarting = new BooleanTimeout(2500);
+  private final BooleanTimeout discarting = new BooleanTimeout(3000);
   
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
