@@ -35,5 +35,5 @@ public interface ITaskRequest<O> {
   
   boolean isValid(StringBuilder because);
 
-  ITask<O> getTask(IProgressFactory factory, Supplier<Boolean> closingStatus);
+  ITask<O> getTask(IProgressFactory factory, Supplier<Boolean> closingStatus,  Supplier<Boolean> discarding);
 }

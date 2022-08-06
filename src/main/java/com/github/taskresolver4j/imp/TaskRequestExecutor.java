@@ -43,7 +43,7 @@ import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
 import com.github.taskresolver4j.ITaskResponse;
-import com.github.taskresolver4j.exception.TaskDeniedException;
+import com.github.taskresolver4j.exception.TaskDiscardException;
 import com.github.taskresolver4j.exception.TaskExecutorDiscartingException;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 import com.github.taskresolver4j.exception.TaskExecutorFinishingException;
@@ -64,7 +64,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   
   private final IRequestResolver<I, O, R> resolver;
 
-  private final BooleanTimeout discarting = new BooleanTimeout(3000);
+  private final BooleanTimeout discarting = new BooleanTimeout(2000);
   
   private final AtomicInteger runningTasks = new AtomicInteger(0);
   
@@ -123,7 +123,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
   
   protected final boolean isBatchState() {
-    return runningTasks.get() > 1;
+    return discarting.isTrue() || runningTasks.get() > 1;
   }
 
   @Override
@@ -159,7 +159,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         progress.step("Notificando criação de requisção");
         onRequestResolved(taskRequest);
         progress.end();
-        ITask<O> task = taskRequest.getTask(factory, this::isClosing);
+        ITask<O> task = taskRequest.getTask(factory, this::isClosing, this::isBatchState);
         try {
           progress.begin(Stage.PROCESSING_TASK);
           progress.info("Tarefa '%s'", task.getId());
@@ -175,9 +175,9 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         } finally {
           task.dispose();
         }
-        
-      } catch (TaskDeniedException e) {
+      } catch (TaskDiscardException e) {
         discarting.setTrue();
+        factory.interrupt();
         throw new TaskExecutorDiscartingException();
       } catch (Exception e) {
         progress.abort(e);
