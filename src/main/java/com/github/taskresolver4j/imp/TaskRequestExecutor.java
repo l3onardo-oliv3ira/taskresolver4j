@@ -42,10 +42,12 @@ import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
 import com.github.taskresolver4j.ITaskResponse;
+import com.github.taskresolver4j.exception.TaskExecutorDiscartingException;
 import com.github.taskresolver4j.exception.TaskExecutorException;
-import com.github.taskresolver4j.exception.TaskExecutorFinishing;
+import com.github.taskresolver4j.exception.TaskExecutorFinishingException;
 import com.github.taskresolver4j.exception.TaskResolverException;
 import com.github.utils4j.imp.Args;
+import com.github.utils4j.imp.BooleanTimeout;
 import com.github.utils4j.imp.Services;
 
 public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITaskRequestExecutor<I, O> {
@@ -57,8 +59,10 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   private volatile boolean closing = false;
 
   protected final ExecutorService executor;
-
+  
   private final IRequestResolver<I, O, R> resolver;
+
+  private final BooleanTimeout discarting = new BooleanTimeout(2500);
   
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
@@ -96,11 +100,17 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   @Override
   public final void notifyOpening() {
     closing = false;
+    bindCanceller();
   }
-  
+
+  private void bindCanceller() {
+    factory.ifCanceller(discarting::setTrue);
+  }
+
   @Override
   public void close() {
     Services.shutdownNow(executor, 2); 
+    discarting.shutdown();
   }
   
   protected boolean isClosing() {
@@ -112,10 +122,18 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     this.executor.execute(runnable);
   }
   
+  private void checkAvailability() throws TaskExecutorException {
+    if (closing) {
+      throw new TaskExecutorFinishingException();
+    }
+    if (discarting.isTrue()) {
+      throw new TaskExecutorDiscartingException();
+    }
+  }
+  
   @Override
   public final void execute(I request, O response) throws TaskExecutorException {
-    if (closing)
-      throw new TaskExecutorFinishing();
+    checkAvailability();
     try {
       IProgressView progress = factory.get(); 
       try {

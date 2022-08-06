@@ -27,10 +27,10 @@
 
 package com.github.taskresolver4j.exception;
 
-public class TaskExecutorFinishing extends TaskExecutorException {
+public class TaskExecutorDiscartingException extends TaskExecutorException {
   private static final long serialVersionUID = 1L;
 
-  public TaskExecutorFinishing() {
-    super("Executor em processo de finalização");
+  public TaskExecutorDiscartingException() {
+    super("Executor descartando requisições por um período fixo de tempo");
   }
 }
