@@ -114,7 +114,6 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   @Override
   public final void close() throws InterruptedException {
     Services.shutdownNow(executor, 2); 
-    discarting.shutdown();
     closing = false;
   }
   
