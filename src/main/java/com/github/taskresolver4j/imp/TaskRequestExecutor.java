@@ -142,8 +142,8 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   @Override
   public final void execute(I request, O response) throws TaskExecutorException {
     checkAvailability();
+    runningTasks.incrementAndGet();
     try {
-      runningTasks.incrementAndGet();
       IProgressView progress = factory.get(); 
       try {
         beginExecution(progress);
