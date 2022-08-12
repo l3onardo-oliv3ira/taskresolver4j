@@ -37,7 +37,7 @@ public abstract class TaskBase<T> extends ParamBasedTask<T> {
   }
   
   protected final void showCancel() {
-    ifNotClosing(() -> CancelAlert.show());    
+    ifNotClosing(() -> CancelAlert.show(getIcon()));    
   }
 
   private final boolean isClosing() {
