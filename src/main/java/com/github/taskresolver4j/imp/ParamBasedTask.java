@@ -36,11 +36,11 @@ import com.github.utils4j.ICanceller;
 import com.github.utils4j.IParam;
 import com.github.utils4j.imp.Params;
 
-public abstract class AbstractTask<T> implements ITask<T> {
+public abstract class ParamBasedTask<T> implements ITask<T> {
 
   protected final Params params;
 
-  protected AbstractTask(Params params) {
+  protected ParamBasedTask(Params params) {
     this.params = params.of(DefaultTaskRequest.PARAM_TASK, this);
   }
 
