@@ -27,9 +27,8 @@
 
 package com.github.taskresolver4j.imp;
 
-import java.util.function.Supplier;
-
 import com.github.progress4j.IProgressFactory;
+import com.github.taskresolver4j.IExecutorContext;
 import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
@@ -41,13 +40,11 @@ public class DefaultTaskRequest<T> extends Params implements ITaskRequest<T> {
   
   public static final String PARAM_PROGRESS_FACTORY = IProgressFactory.class.getSimpleName() + ".factory";
 
-  public static final String PARAM_EXECUTOR_CLOSING = ITaskRequestExecutor.class.getSimpleName()  + ".closing";
+  public static final String PARAM_EXECUTOR_CONTEXT = ITaskRequestExecutor.class.getSimpleName()  + ".context";
   
-  public static final String PARAM_EXECUTOR_ISBATCHSTATE = ITaskRequestExecutor.class.getSimpleName() + ".isbatchstate";
-
   @Override
-  public final ITask<T> getTask(IProgressFactory factory, Supplier<Boolean> closing, Supplier<Boolean> discarding) {
-    return of(PARAM_PROGRESS_FACTORY, factory).of(PARAM_EXECUTOR_CLOSING, closing).of(PARAM_EXECUTOR_ISBATCHSTATE, discarding).getValue(PARAM_TASK);
+  public final ITask<T> getTask(IProgressFactory factory, IExecutorContext context) {
+    return of(PARAM_PROGRESS_FACTORY, factory).of(PARAM_EXECUTOR_CONTEXT, context).getValue(PARAM_TASK);
   }
   
   @Override

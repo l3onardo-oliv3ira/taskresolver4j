@@ -38,6 +38,9 @@ import org.slf4j.LoggerFactory;
 import com.github.progress4j.IProgressFactory;
 import com.github.progress4j.IProgressView;
 import com.github.progress4j.IStage;
+import com.github.taskresolver4j.IExceptionContext;
+import com.github.taskresolver4j.IExecutorContext;
+import com.github.taskresolver4j.IFailureAlerter;
 import com.github.taskresolver4j.IRequestResolver;
 import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
@@ -48,11 +51,12 @@ import com.github.taskresolver4j.exception.TaskExecutorDiscartingException;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 import com.github.taskresolver4j.exception.TaskExecutorFinishingException;
 import com.github.taskresolver4j.exception.TaskResolverException;
+import com.github.utils4j.gui.imp.ExceptionAlert;
 import com.github.utils4j.imp.Args;
 import com.github.utils4j.imp.BooleanTimeout;
 import com.github.utils4j.imp.Services;
 
-public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITaskRequestExecutor<I, O> {
+public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITaskRequestExecutor<I, O>, IExecutorContext {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(TaskRequestExecutor.class);
   
@@ -64,10 +68,12 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   
   private final IRequestResolver<I, O, R> resolver;
 
-  private final BooleanTimeout discarting = new BooleanTimeout(2000);
-  
   private final AtomicInteger runningTasks = new AtomicInteger(0);
-  
+
+  private final BooleanTimeout discarting = new BooleanTimeout(2000);
+
+  private final IFailureAlerter alerter = new AsyncFailureAlerter(this::showFailure, this::isRunningInBatch);
+
   private static enum Stage implements IStage {
     REQUEST_HANDLING("Tratando requisição"),
     
@@ -116,13 +122,20 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     Services.shutdownNow(executor, 2); 
     closing = false;
   }
-  
-  protected final boolean isClosing() {
+
+  @Override
+  public final boolean isClosing() {
     return closing;
   }
+ 
+  @Override
+  public final boolean isRunningInBatch() {
+    return runningTasks.get() > 1;
+  }
   
-  protected final boolean isBatchState() {
-    return discarting.isTrue() || runningTasks.get() > 1;
+  @Override
+  public final boolean isBatchState() {
+    return discarting.isTrue() || isRunningInBatch();
   }
 
   @Override
@@ -130,6 +143,31 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     this.executor.execute(runnable);
   }
   
+  protected void onRequestResolved(R taskRequest) {
+  }
+
+  protected void beginExecution(IProgressView progress) {
+    progress.display();
+  }
+  
+  protected void showFailure(IExceptionContext context) {
+    ExceptionAlert.show(context.getMessage(), context.getDetail(), context.getCause());
+  }
+  
+  @Override
+  public final void alert(IExceptionContext context) {
+    alerter.alert(context);
+  }
+
+  protected void endExecution(IProgressView progress) {
+    try {
+      progress.undisplay();
+      progress.stackTracer(s -> LOGGER.info(s.toString()));
+    } finally {
+      progress.dispose();
+    }
+  }
+
   private void checkAvailability() throws TaskExecutorException {
     if (closing) {
       throw new TaskExecutorFinishingException();
@@ -158,7 +196,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         progress.step("Notificando criação de requisção");
         onRequestResolved(taskRequest);
         progress.end();
-        ITask<O> task = taskRequest.getTask(factory, this::isClosing, this::isBatchState);
+        ITask<O> task = taskRequest.getTask(factory, this);
         try {
           progress.begin(Stage.PROCESSING_TASK);
           progress.info("Tarefa '%s'", task.getId());
@@ -176,7 +214,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         }
       } catch (TaskDiscardException e) {
         discarting.setTrue();
-        factory.interrupt();
+        factory.interrupt(); 
         throw new TaskExecutorDiscartingException();
       } catch (Exception e) {
         progress.abort(e);
@@ -191,23 +229,4 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
       runningTasks.decrementAndGet();
     }
   }
-
-  protected void onRequestResolved(R taskRequest) {
-  }
-
-  protected void beginExecution(IProgressView progress) {
-    progress.display();
-  }
-
-  protected void endExecution(IProgressView progress) {
-    try {
-      progress.undisplay();
-      progress.stackTracer(s -> LOGGER.info(s.toString()));
-    } finally {
-      progress.dispose();
-    }
-  }
 }
-
-
-

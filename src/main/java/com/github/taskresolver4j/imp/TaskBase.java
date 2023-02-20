@@ -1,10 +1,36 @@
+/*
+* MIT License
+* 
+* Copyright (c) 2022 Leonardo de Lima Oliveira
+* 
+* https://github.com/l3onardo-oliv3ira
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/
+
 package com.github.taskresolver4j.imp;
 
 import static com.github.utils4j.imp.Strings.empty;
 
 import java.awt.Image;
-import java.util.function.Supplier;
 
+import com.github.taskresolver4j.IExecutorContext;
 import com.github.taskresolver4j.exception.TaskDiscardException;
 import com.github.taskresolver4j.exception.TaskException;
 import com.github.utils4j.gui.imp.CancelAlert;
@@ -40,14 +66,16 @@ public abstract class TaskBase<T> extends ParamBasedTask<T> {
     ifNotClosing(() -> CancelAlert.show(getIcon()));    
   }
 
+  protected final IExecutorContext getExecutorContext() {
+    return (IExecutorContext)getParameterValue(DefaultTaskRequest.PARAM_EXECUTOR_CONTEXT);
+  }
+  
   private final boolean isClosing() {
-    Supplier<Boolean> closing = getParameter(DefaultTaskRequest.PARAM_EXECUTOR_CLOSING).orElse(() -> false);
-    return closing.get();
+    return getExecutorContext().isClosing();
   }
 
   private final boolean isBatchState() {
-    Supplier<Boolean> discarding = getParameter(DefaultTaskRequest.PARAM_EXECUTOR_ISBATCHSTATE).orElse(() -> false);
-    return discarding.get();
+    return getExecutorContext().isBatchState();
   }
 
   protected final void ifNotClosing(Runnable code) {
@@ -58,7 +86,6 @@ public abstract class TaskBase<T> extends ParamBasedTask<T> {
 
   protected final void ifBatchStateThrowDiscard(String message) throws TaskDiscardException {
     if (isBatchState()) {
-      //ifNotClosing(() -> CancelAlert.showWaiting());
       throw new TaskDiscardException(message);
     }
   }
@@ -83,11 +110,15 @@ public abstract class TaskBase<T> extends ParamBasedTask<T> {
     return showFail(message, detail, null);
   }
 
-  protected final TaskException showFail(String message, String detail, Throwable cause) {
-    ifNotClosing(() -> ExceptionAlert.show(getIcon(), message, detail, cause));
+  protected final TaskException showFail(String message, String detail, Throwable cause) {    
+    ifNotClosing(getAlertFailCode(message, detail, cause));
     return new TaskException(message + "\n" + detail, cause);
   }
 
+  protected Runnable getAlertFailCode(String message, String detail, Throwable cause) {
+    return () -> ExceptionAlert.show(getIcon(), message, detail, cause);
+  }  
+  
   protected String getSupport() {
     return "Informe os detalhes técnicos abaixo ao suporte/callcenter";
   }
