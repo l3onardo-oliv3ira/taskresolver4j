@@ -14,7 +14,7 @@ import com.github.utils4j.imp.BooleanTimeout;
 
 class AsyncFailureAlerter implements IFailureAlerter {
   
-  private final Supplier<Boolean> isRunningInBatch;
+  private final Supplier<Boolean> isToPostpone;
 
   private final Consumer<IExceptionContext> display;
 
@@ -22,9 +22,9 @@ class AsyncFailureAlerter implements IFailureAlerter {
   
   private final BooleanTimeout debt = new BooleanTimeout(1500, this::checkDebt);
 
-  public AsyncFailureAlerter(Consumer<IExceptionContext> display, Supplier<Boolean> isRunningInBatch) {
+  public AsyncFailureAlerter(Consumer<IExceptionContext> display, Supplier<Boolean> isToPostpone) {
     this.display = Args.requireNonNull(display, "display is null");
-    this.isRunningInBatch = Args.requireNonNull(isRunningInBatch, "runningBatch is null");
+    this.isToPostpone = Args.requireNonNull(isToPostpone, "isToPostpone is null");
   }
 
   @Override
@@ -38,7 +38,7 @@ class AsyncFailureAlerter implements IFailureAlerter {
   }
   
   private void checkDebt() {
-    if (isRunningInBatch.get()) {
+    if (isToPostpone.get()) {
       debt.setTrue();
       return;
     }

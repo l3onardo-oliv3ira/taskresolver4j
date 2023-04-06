@@ -214,7 +214,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         }
       } catch (TaskDiscardException e) {
         discarting.setTrue();
-        factory.interrupt(); 
+        factory.cancel(Thread.currentThread()); 
         throw new TaskExecutorDiscartingException();
       } catch (Exception e) {
         progress.abort(e);
