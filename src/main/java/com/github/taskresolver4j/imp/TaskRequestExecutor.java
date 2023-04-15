@@ -46,7 +46,9 @@ import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
 import com.github.taskresolver4j.ITaskResponse;
+import com.github.taskresolver4j.exception.TaskDeniedException;
 import com.github.taskresolver4j.exception.TaskDiscardException;
+import com.github.taskresolver4j.exception.TaskEscapeException;
 import com.github.taskresolver4j.exception.TaskExecutorDiscartingException;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 import com.github.taskresolver4j.exception.TaskExecutorFinishingException;
@@ -70,7 +72,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   private final AtomicInteger runningTasks = new AtomicInteger(0);
 
-  private final BooleanTimeout discarting = new BooleanTimeout(2000);
+  private final BooleanTimeout discarding = new BooleanTimeout("task-executor", 2000);
 
   private final IFailureAlerter alerter = new AsyncFailureAlerter(this::showFailure, this::isRunningInBatch);
 
@@ -114,7 +116,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   }
 
   private void bindCanceller() {
-    factory.ifCanceller(discarting::setTrue);
+    factory.ifCanceller(discarding::setTrue);
   }
 
   @Override
@@ -135,7 +137,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   
   @Override
   public final boolean isBatchState() {
-    return discarting.isTrue() || isRunningInBatch();
+    return discarding.isTrue() || isRunningInBatch();
   }
 
   @Override
@@ -158,7 +160,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
   public final void alert(IExceptionContext context) {
     alerter.alert(context);
   }
-
+  
   protected void endExecution(IProgressView progress) {
     try {
       progress.undisplay();
@@ -172,7 +174,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     if (closing) {
       throw new TaskExecutorFinishingException();
     }
-    if (discarting.isTrue()) {
+    if (discarding.isTrue()) {
       throw new TaskExecutorDiscartingException();
     }
   }
@@ -212,10 +214,11 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
         } finally {
           task.dispose();
         }
+      } catch (TaskEscapeException e) {
+        discarding.setTrue();
+        throwExecutorDiscartingException();
       } catch (TaskDiscardException e) {
-        discarting.setTrue();
-        factory.cancel(Thread.currentThread()); 
-        throw new TaskExecutorDiscartingException();
+        throwExecutorDiscartingException();
       } catch (Exception e) {
         progress.abort(e);
       } finally {
@@ -228,5 +231,10 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     } finally {
       runningTasks.decrementAndGet();
     }
+  }
+
+  private void throwExecutorDiscartingException() throws TaskExecutorDiscartingException {
+    factory.cancel(Thread.currentThread()); 
+    throw new TaskExecutorDiscartingException();
   }
 }

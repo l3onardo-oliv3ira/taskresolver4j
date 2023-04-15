@@ -33,4 +33,8 @@ public class TaskDiscardException extends TaskException {
   public TaskDiscardException(String message) {
     super(message);
   }
+  
+  public TaskDiscardException(String message, Exception cause) {
+    super(message, cause);
+  }
 }

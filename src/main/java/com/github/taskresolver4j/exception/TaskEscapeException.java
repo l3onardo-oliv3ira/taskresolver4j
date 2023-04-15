@@ -27,10 +27,15 @@
 
 package com.github.taskresolver4j.exception;
 
-public class TaskDeniedException extends TaskEscapeException {
-  private static final long serialVersionUID = 5036913751425298195L;
+public class TaskEscapeException extends TaskDiscardException {
   
-  public TaskDeniedException(String message) {
+  private static final long serialVersionUID = 2153276186628159862L;
+
+  public TaskEscapeException(String message) {
     super(message);
+  }
+  
+  public TaskEscapeException(String message, Exception cause) {
+    super(message, cause);
   }
 }

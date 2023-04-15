@@ -20,7 +20,7 @@ class AsyncFailureAlerter implements IFailureAlerter {
 
   private final List<IExceptionContext> stack = new LinkedList<>();
   
-  private final BooleanTimeout debt = new BooleanTimeout(1500, this::checkDebt);
+  private final BooleanTimeout debt = new BooleanTimeout("async-fail", 1500, this::checkDebt);
 
   public AsyncFailureAlerter(Consumer<IExceptionContext> display, Supplier<Boolean> isToPostpone) {
     this.display = Args.requireNonNull(display, "display is null");
