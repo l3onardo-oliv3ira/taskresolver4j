@@ -30,7 +30,13 @@ package com.github.taskresolver4j.exception;
 public class TaskExecutorDiscartingException extends TaskExecutorException {
   private static final long serialVersionUID = 1L;
 
+  private static final String DEFAULT_MESSAGE = "Descarte de requisição obsoleta!";
+  
   public TaskExecutorDiscartingException() {
-    super("Executor descartando requisições por um período fixo de tempo");
+    super(DEFAULT_MESSAGE);
+  }
+
+  public TaskExecutorDiscartingException(Throwable cause) {
+    super(DEFAULT_MESSAGE, cause);
   }
 }

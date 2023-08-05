@@ -46,12 +46,12 @@ import com.github.taskresolver4j.ITask;
 import com.github.taskresolver4j.ITaskRequest;
 import com.github.taskresolver4j.ITaskRequestExecutor;
 import com.github.taskresolver4j.ITaskResponse;
-import com.github.taskresolver4j.exception.TaskDeniedException;
 import com.github.taskresolver4j.exception.TaskDiscardException;
 import com.github.taskresolver4j.exception.TaskEscapeException;
 import com.github.taskresolver4j.exception.TaskExecutorDiscartingException;
 import com.github.taskresolver4j.exception.TaskExecutorException;
 import com.github.taskresolver4j.exception.TaskExecutorFinishingException;
+import com.github.taskresolver4j.exception.TaskExhaustedEscapeException;
 import com.github.taskresolver4j.exception.TaskResolverException;
 import com.github.utils4j.gui.imp.ExceptionAlert;
 import com.github.utils4j.imp.Args;
@@ -72,7 +72,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   private final AtomicInteger runningTasks = new AtomicInteger(0);
 
-  private final BooleanTimeout discarding = new BooleanTimeout("task-executor", 2000);
+  private final BooleanTimeout discarding = new BooleanTimeout("task-executor");
 
   private final IFailureAlerter alerter = new AsyncFailureAlerter(this::showFailure, this::isRunningInBatch);
 
@@ -121,7 +121,7 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
 
   @Override
   public final void close() throws InterruptedException {
-    Services.shutdownNow(executor, 2); 
+    Services.shutdownNow(executor, 2, 3); 
     closing = false;
   }
 
@@ -132,7 +132,12 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
  
   @Override
   public final boolean isRunningInBatch() {
-    return runningTasks.get() > 1;
+    return getRunningTasks() > 1;
+  }
+  
+  @Override
+  public final long getRunningTasks() {
+    return runningTasks.get();
   }
   
   @Override
@@ -156,11 +161,19 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     ExceptionAlert.show(context.getMessage(), context.getDetail(), context.getCause());
   }
   
+  protected void handleExhaustedState() {
+  }
+  
   @Override
   public final void alert(IExceptionContext context) {
     alerter.alert(context);
   }
   
+  private void throwExecutorDiscartingException(Throwable cause) throws TaskExecutorDiscartingException {
+    factory.cancel(Thread.currentThread()); 
+    throw new TaskExecutorDiscartingException(cause);
+  }
+
   protected void endExecution(IProgressView progress) {
     try {
       progress.undisplay();
@@ -185,24 +198,32 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
     runningTasks.incrementAndGet();
     try {
       IProgressView progress = factory.get(); 
+      
       try {
         beginExecution(progress);
+        
         progress.begin(Stage.REQUEST_HANDLING, 2);
         progress.step("Resolvendo URL");
         R taskRequest;
+        
         try {
           taskRequest = resolver.resolve(request);
         } catch (TaskResolverException e) {
           throw new TaskExecutorException("Não foi possível resolver a requisição", e);
         }
+        
         progress.step("Notificando criação de requisção");
         onRequestResolved(taskRequest);
         progress.end();
+        
         ITask<O> task = taskRequest.getTask(factory, this);
         try {
+        
           progress.begin(Stage.PROCESSING_TASK);
           progress.info("Tarefa '%s'", task.getId());
+          
           ITaskResponse<O> output = task.get();          
+          
           try {
             output.processResponse(response);
           } catch (IOException e) {
@@ -210,31 +231,39 @@ public class TaskRequestExecutor<I, O, R extends ITaskRequest<O>> implements ITa
             progress.abort(e);
             return;
           }          
+          
           progress.end();
+    
         } finally {
           task.dispose();
         }
+      
+      } catch (TaskExhaustedEscapeException e) {
+        discarding.setTrue(this::handleExhaustedState);
+        throwExecutorDiscartingException(e);
+
       } catch (TaskEscapeException e) {
         discarding.setTrue();
-        throwExecutorDiscartingException();
+        throwExecutorDiscartingException(e);        
+      
       } catch (TaskDiscardException e) {
-        throwExecutorDiscartingException();
+        throwExecutorDiscartingException(e);
+      
       } catch (Exception e) {
         progress.abort(e);
+      
       } finally {
         endExecution(progress);
       }
+    
     } catch (TaskExecutorException e) {
       throw e;
+    
     } catch (Throwable e) {
       throw new TaskExecutorException("Exceção inesperada na execução da tarefa", e);
+    
     } finally {
       runningTasks.decrementAndGet();
     }
-  }
-
-  private void throwExecutorDiscartingException() throws TaskExecutorDiscartingException {
-    factory.cancel(Thread.currentThread()); 
-    throw new TaskExecutorDiscartingException();
   }
 }

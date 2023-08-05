@@ -39,4 +39,6 @@ public interface ITaskRequestExecutor<I, O> {
   void close() throws InterruptedException;
   
   void execute(I request, O response) throws TaskExecutorException;
+
+  long getRunningTasks();
 }

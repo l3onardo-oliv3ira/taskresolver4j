@@ -112,7 +112,7 @@ public abstract class TaskBase<T> extends ParamBasedTask<T> {
 
   protected final TaskException showFail(String message, String detail, Throwable cause) {    
     ifNotClosing(getAlertFailCode(message, detail, cause));
-    return new TaskException(message + "\n" + detail, cause);
+    return cause instanceof TaskException ? (TaskException)cause : new TaskException(message + "\n" + detail, cause);
   }
 
   protected Runnable getAlertFailCode(String message, String detail, Throwable cause) {

@@ -38,7 +38,7 @@ import com.github.utils4j.imp.Params;
 
 public abstract class ParamBasedTask<T> implements ITask<T> {
 
-  protected final Params params;
+  private final Params params;
 
   protected ParamBasedTask(Params params) {
     this.params = params.of(DefaultTaskRequest.PARAM_TASK, this);
@@ -57,15 +57,24 @@ public abstract class ParamBasedTask<T> implements ITask<T> {
   }
   
   protected final IProgressView getProgress() {
-    return getParameter(DefaultTaskRequest.PARAM_PROGRESS_FACTORY).<IProgressFactory>get().get();
+    return getFactory().get();
+  }
+
+  private IProgressFactory getFactory() {
+    return getParameter(DefaultTaskRequest.PARAM_PROGRESS_FACTORY).<IProgressFactory>get();
   }
   
   protected final Supplier<ICanceller> getCanceller() {
-    return () -> getProgress();
+    return getFactory()::get;
   }
   
   @Override
   public boolean isValid(StringBuilder whyNot) {
     return true;
+  }
+  
+  @Override
+  public void dispose() {
+    params.clear();
   }
 }
